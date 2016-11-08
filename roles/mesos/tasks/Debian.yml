@@ -5,46 +5,52 @@
 
 # Java8 goes first so no other package (i.e. maven) installs Java7 as a dependency
 - name: Install Debian OS packages - prerequisites
-  action: apt pkg={{item}} state=latest install_recommends=no update_cache=true
+  action: apt pkg={{ package }} state=latest install_recommends=no update_cache=true
   with_items:
     - openjdk-8-jdk
   retries: 3
   delay: 5
   register: result
   until: result|success
+  loop_control:
+    loop_var: package
 
 # In case Java7 is already installed - remove it
 - name: Remove Debian OS packages
-  apt: pkg={{item}} state=absent update_cache=false
+  apt: pkg={{ package }} state=absent update_cache=false
   with_items:
     - default-jre
     - default-jre-headless
     - openjdk-7-jre
     - openjdk-7-jre-headless
+  loop_control:
+    loop_var: package
 
 - name: Install Debian OS packages
-  action: apt pkg={{item}} state=latest install_recommends=no update_cache=false
+  action: apt pkg={{ package }} state=latest install_recommends=no update_cache=false
   with_items:
     - wget
     - curl
     - unzip
     - python-setuptools
     - python-dev
-    - build-essential 
+    - build-essential
     - python-dev
-    - python-boto 
-    - libcurl4-nss-dev 
-    - libsasl2-dev 
-    - libsasl2-modules 
-    - libapr1-dev 
+    - python-boto
+    - libcurl4-nss-dev
+    - libsasl2-dev
+    - libsasl2-modules
+    - libapr1-dev
     - libsvn-dev
     - tar
     - git
     - autoconf
     - automake
     - libtool
-    - maven 
+    - maven
   retries: 3
   delay: 5
   register: result
   until: result|success
+  loop_control:
+    loop_var: package

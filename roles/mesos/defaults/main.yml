@@ -1,10 +1,7 @@
 ---
-mesos_install_mode: "master" # {master|slave|master-slave}
-mesos_version: "fork"
 
-# RedHat: EPEL and Mesosphere yum repositories URL
-epel_repo: "http://dl.fedoraproject.org/pub/epel/{{ os_version_major }}/{{ ansible_architecture }}/{{ epel_releases[os_version_major] }}"
-mesosphere_yum_repo: "http://repos.mesosphere.com/el/{{ os_version_major }}/noarch/RPMS/{{ mesosphere_releases[os_version_major] }}"
+mesos_install_mode: "none" # {master|slave|master-slave|none}
+mesos_version: "fork"
 
 # conf file settings
 mesos_cluster_name: "mesos_cluster"
@@ -27,8 +24,6 @@ mesos_local_dir: /tmp/mesos
 # Containerizer
 mesos_executor_timeout: "5mins"
 mesos_install_from_package: true
-mesos_package_url: "http://repos.mesosphere.com/ubuntu/pool/main/m/mesos"
-mesos_package_name: "mesos_1.0.1-2.0.93.ubuntu1404_amd64.deb"
 
 # Additional configurations
 mesos_additional_configs: []

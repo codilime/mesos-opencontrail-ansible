@@ -1,21 +1,19 @@
 ---
-# Here we are using the debian package if debian
-- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "{{ item }}"
+  with_first_found:
+   - "{{ ansible_distribution }}.yml"
+   - "{{ ansible_os_family }}.yml"
+  when: mesos_install_mode != "none"
 
 - include: common.yml
 
-# Here we are using the debian package if debian
-- include: Debian.yml
-  when: ansible_os_family == "Debian"
-
-- include: RedHat.yml
-  when: ansible_os_family == "RedHat"
-
 - include: mesos-install.yml
-  when: not mesos_install_from_package
+  when: not mesos_install_from_package and mesos_install_mode != "none"
 
 - include: mesos-install-package.yml
-  when: mesos_install_from_package and ansible_os_family == "Debian"
+  when: mesos_install_from_package and mesos_install_mode != "none"
 
 - include: mesos.yml
+  when: mesos_install_mode != "none"
 

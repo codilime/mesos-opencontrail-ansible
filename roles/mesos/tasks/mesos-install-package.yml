@@ -1,10 +1,22 @@
 ---
 
-- name: Propagate Mesos DEB package
+- include_vars: "{{ item }}"
+  with_first_found:
+   - "{{ ansible_distribution }}_vars.yml"
+   - "{{ ansible_os_family }}_vars.yml"
+  when: mesos_install_mode != "none"
+
+- name: Propagate Mesos package
   get_url: dest="/tmp/{{ mesos_package_name }}" url="{{ mesos_package_url }}/{{ mesos_package_name }}" force=yes
 
-- name:
+- name: Install mesos package (Debian)
   apt: deb=/tmp/{{mesos_package_name}} state=present update_cache=false force=yes install_recommends=yes
+  when: ansible_os_family == "Debian"
+
+- name: Install mesos package (RedHat)
+  command: "{{ ansible_pkg_mgr }} -y localinstall /tmp/{{mesos_package_name}}"
+  when: ansible_os_family == "RedHat"
+
 
 - name: run ldconfig
   action: command /sbin/ldconfig
