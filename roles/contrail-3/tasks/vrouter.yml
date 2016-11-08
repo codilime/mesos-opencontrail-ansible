@@ -7,17 +7,52 @@
     mode: 0644
   notify:
     - restart contrail-vrouter-agent
+  when: init_system == "upstart"
+
+- name: VRouter agent systemd
+  template:
+    src: contrail-vrouter-agent.service.j2
+    dest: /etc/systemd/system/contrail-vrouter-agent.service
+    mode: 0644
+  notify:
+    - restart contrail-vrouter-agent
+  when: init_system == "systemd"
+
+- name: reload systemd
+  command: systemctl --system daemon-reload
+  when: init_system == "systemd"
 
 - name: Copy image
   become: no
-  shell: scp "{{ private_file_server }}:{{ contrail_images_path }}/{{ item }}" /tmp/
+  shell: scp "{{ private_file_server_user }}@{{ private_file_server }}:{{ contrail_images_path }}/{{ image }}" /tmp/
   with_items:
-    - "{{ contrail_agent_image }}"
+    - "{{ contrail_agent_image_file }}"
+  loop_control:
+    loop_var: image
 
 - name: Load docker images
-  shell: docker load < "/tmp/{{ item }}"
+  shell: docker load < "/tmp/{{ image }}"
   with_items:
-    - "{{ contrail_agent_image }}"
+    - "{{ contrail_agent_image_file }}"
+  loop_control:
+    loop_var: image
+
+- name: Interface up/down scripts
+  copy: src={{ if_file }} dest=/etc/sysconfig/network-scripts mode=755
+  with_items:
+    - ifup-vhost
+    - ifdown-vhost
+  loop_control:
+    loop_var: if_file
+  when: ansible_os_family == "RedHat"
+
+- name: Interface configuration file (physical)
+  template: src=ifcfg-eth.j2 dest="/etc/sysconfig/network-scripts/ifcfg-{{ contrail_host_interface }}"
+  when: ansible_os_family == "RedHat"
+
+- name: Interface configuration file (vhost0)
+  template: src=ifcfg-vhost0.j2 dest=/etc/sysconfig/network-scripts/ifcfg-vhost0
+  when: ansible_os_family == "RedHat"
 
 - name: uname -r
   shell: uname -r
@@ -28,6 +63,35 @@
   args:
     name: "linux-headers-{{ uname.stdout }}"
     state: latest
+  when: ansible_os_family == "Debian"
+
+- name: Install linux headers
+  yum:
+  args:
+    name: "{{ package }}"
+    state: latest
+  with_items:
+    - kernel-headers-{{ uname.stdout }}
+    - kernel-devel-{{ uname.stdout }}
+  loop_control:
+    loop_var: package
+  when: ansible_os_family == "RedHat"
+
+- name: Prepare vrouter module directory
+  file:
+  args:
+    path: "/usr/lib/modules/{{ uname.stdout }}/updates/dkms/"
+    state: directory
+    mode: 0777
+  when: ansible_os_family == "RedHat"
+
+- name: Copy over vrouter module for RedHat
+  copy: dest=/usr/lib/modules/{{ uname.stdout }}/updates/dkms/vrouter.ko src="vrouter_RedHat.ko" force=yes mode=0644
+  when: ansible_os_family == "RedHat"
+
+- name: Update module deps
+  become: yes
+  command: depmod
 
 - name: Start vrouter agent
   service: name=contrail-vrouter-agent enabled=yes state=started

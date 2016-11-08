@@ -1,0 +1,15 @@
+---
+
+contrail_images_path: "contrail-3.1/RedHat"
+
+contrail_controller_image: "contrail-controller-liberty"
+contrail_analytics_image: "contrail-analytics-liberty"
+contrail_agent_image: "contrail-agent-liberty"
+
+contrail_controller_image_version: "3.1.1"
+contrail_analytics_image_version: "3.1.1"
+contrail_agent_image_version: "3.1.1"
+
+contrail_controller_image_file: "{{ contrail_controller_image }}-{{ contrail_controller_image_version }}.tar.gz"
+contrail_analytics_image_file: "{{ contrail_analytics_image }}-{{ contrail_analytics_image_version }}.tar.gz"
+contrail_agent_image_file: "{{ contrail_agent_image }}-{{ contrail_agent_image_version }}.tar.gz"

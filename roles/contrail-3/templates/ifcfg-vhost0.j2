@@ -1,0 +1,8 @@
+DEVICE=vhost0
+BOOTPROTO=none
+DEVICETYPE=vhost
+IPADDR="{{ contrail_host_ipaddr }}"
+PHYSDEV="{{ contrail_host_interface }}"
+{% if contrail_host_gateway -%}
+GATEWAY={{ contrail_host_gateway }}
+{% endif -%}

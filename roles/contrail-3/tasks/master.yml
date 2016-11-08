@@ -8,19 +8,34 @@
   notify:
     - restart contrail-control
     - restart contrail-analytics
+  when: init_system == "upstart"
+
+- name: Install control-node service (systemd)
+  template: src="{{ item }}.service.j2" dest="/etc/systemd/system/{{ item }}.service"
+  with_items:
+    - contrail-control
+    - contrail-analytics
+  notify:
+    - restart contrail-control
+    - restart contrail-analytics
+  when: init_system == "systemd"
+
+- name: reload systemd
+  command: systemctl --system daemon-reload
+  when: init_system == "systemd"
 
 - name: Copy images to master
   become: no
-  shell: scp "{{ private_file_server }}:{{ contrail_images_path }}/{{ item }}" /tmp/
+  shell: scp "{{ private_file_server_user }}@{{ private_file_server }}:{{ contrail_images_path }}/{{ item }}" /tmp/
   with_items:
-    - "{{ contrail_controler_image }}"
-    - "{{ contrail_analytics_image }}"
+    - "{{ contrail_controller_image_file }}"
+    - "{{ contrail_analytics_image_file }}"
 
 - name: Load docker images
   shell: docker load < "/tmp/{{ item }}"
   with_items:
-    - "{{ contrail_controler_image }}"
-    - "{{ contrail_analytics_image }}"
+    - "{{ contrail_controller_image_file }}"
+    - "{{ contrail_analytics_image_file }}"
 
 - name: Start contrail-control service
   service: name="contrail-control" enabled=yes state=started

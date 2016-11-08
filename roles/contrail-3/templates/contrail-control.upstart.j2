@@ -14,5 +14,5 @@ post-stop script
 end script
 
 script
-        /usr/bin/docker run --name contrail-control -v "{{ contrail_log_dir }}:/var/log/contrail" --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes contrail-controller-liberty:3.1.1.0-29
+        /usr/bin/docker run --name contrail-control -v "{{ contrail_log_dir }}:/var/log/contrail" --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes {{ contrail_controller_image }}:{{ contrail_controller_image_version }}
 end script

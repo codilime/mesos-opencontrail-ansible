@@ -15,6 +15,32 @@
       - contrail_host_ipaddr is defined
       - contrail_host_address is defined
       - contrail_host_gateway is defined
+      - contrail_host_prefixlen is defined
+      - contrail_master_host_address is defined
+      - contrail_master_host_addresses is defined
+
+- include_vars: "{{ item }}"
+  with_first_found:
+   - "{{ ansible_distribution }}_vars.yml"
+   - "{{ ansible_os_family }}_vars.yml"
+
+- name: Detect init system
+  shell: >
+    if [[ $(/sbin/init --version) =~ upstart ]]; then echo upstart;
+    elif [[ $(systemctl) =~ -.mount ]]; then echo systemd;
+    elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo sysv-init;
+    else echo unknown; fi
+  args:
+    executable: /bin/bash
+  register: init_system_detect
+
+- name: Set init system fact
+  set_fact:
+    init_system: "{{ init_system_detect.stdout }}"
+
+- name: Check init system compatibility
+  assert:
+    that: init_system != "unknown"
 
 - name: Create log dir
   file:
@@ -23,8 +49,16 @@
     state: directory
     mode: 0777
 
-- name: Install contrail-python
-  include: contrail-python.yml
+- name: Create etc contrail dir
+  file:
+  args:
+    path: "/etc/contrail"
+    state: directory
+    mode: 0777
+
+- name: Install masters
+  include: master.yml
+  when: inventory_hostname in groups['masters']
 
 - name: Install compute nodes
   include: "{{ item }}"
@@ -37,7 +71,3 @@
   with_items:
     - gateway.yml
   when: "'gateways' in groups and inventory_hostname in groups['gateways']"
-
-- name: Install masters
-  include: master.yml
-  when: inventory_hostname in groups['masters']
