@@ -1,3 +1,4 @@
+---
+
 marathon_http_port: 8880
-marathon_package_name: "marathon_1.3.0-0.1.20160831224845.RC6.ubuntu1404_amd64.deb"
 marathon_packages_path: "marathon"

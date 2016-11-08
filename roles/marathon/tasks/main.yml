@@ -38,17 +38,28 @@
 #  with_items:
 #    - sbt assembly
 
-- name: Download marathon DEB package
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}_vars.yml"
+    - "{{ ansible_os_family }}_vars.yml"
+
+
+- name: Download marathon package
   become: no
-  shell: scp "{{ private_file_server }}:{{ marathon_packages_path }}/{{ item }}" /tmp/
+  shell: scp "{{ private_file_server_user }}@{{ private_file_server }}:{{ marathon_packages_path }}/{{ item }}" /tmp/
   with_items:
     - "{{ marathon_package_name }}"
 
 #- name: Propagate marathon DEB package
 #  copy: src="{{ marathon_package_name }}" dest="/tmp/{{ marathon_package_name }}" force=yes
 
+- name: Install Marathon (RedHat)
+  command: "{{ ansible_pkg_mgr }} -y localinstall /tmp/{{ marathon_package_name }}"
+  when: ansible_os_family == "RedHat"
+
 - name: Install Marathon
   apt: deb=/tmp/{{ marathon_package_name }} state=present update_cache=false force=yes install_recommends=yes
+  when: ansible_os_family == "Debian"
 
 - name: run ldconfig
   action: command /sbin/ldconfig
@@ -58,6 +69,18 @@
 
 - name: Create upstart config
   copy: src=marathon.conf dest=/etc/init/marathon.conf
+  when: init_system == "upstart"
+
+- name: Create systemd config
+  copy: src=marathon.service dest=/etc/systemd/system
+  when: init_system == "systemd"
+
+- name: reload systemd
+  command: systemctl --system daemon-reload
+  when: init_system == "systemd"
+
+- name: Enable marathon service
+  service: name=marathon enabled=yes
 
 - name: Create config directory
   file: path=/etc/marathon/conf state=directory
