@@ -10,58 +10,6 @@
   register: distro
   always_run: yes
 
-# Need to do it this way explicitly
-# Using filters will try to get filter_plugins
-# which is dependent on netaddr
-- name: Install netaddr
-  local_action: apt
-  args:
-    name: python-netaddr
-    state: latest
-    force: yes
-  ignore_errors: yes
-  run_once: true
-
-- name: Install netaddr
-  local_action: yum
-  args:
-    name: python-netaddr
-    state: latest
-  ignore_errors: yes
-  run_once: true
-
-- name: Make sure necessary packages are installed
-  become: yes
-  local_action: "{{ ansible_pkg_mgr }}"
-  args:
-    name: "{{ item }}"
-    state: latest
-    force: yes
-    update_cache: yes
-  with_items:
-    - python-pip
-    - python-dev
-    - python-netaddr
-    - python-markupsafe
-  run_once: true
-  retries: 3
-  delay: 5
-  register: result
-  until: result|success
-
-- name: Determine if Atomic
-  stat: path=/run/ostree-booted
-  register: s
-  changed_when: false
-
-- name: Set the is_atomic fact
-  set_fact:
-    is_atomic: true
-  when: s.stat.exists
-
-- include: fedora-dnf.yml
-  when: os_version.stdout|int >= 22 and 'Fedora' in distro.stdout and is_atomic is not defined
-
 - name: Copy known_hosts file
   copy: src="{{ tmp_known_hosts_file }}" dest="/tmp/{{ tmp_known_hosts_file }}"
 
@@ -72,47 +20,44 @@
   become: no
   shell: cat "/tmp/{{ tmp_known_hosts_file }}" >> ~/.ssh/known_hosts
 
-- name: Determine if Atomic
-  stat: path=/run/ostree-booted
-  register: s
-  changed_when: false
-  always_run: yes
+- name: "Get python pip provisioning scripts"
+  get_url: dest=/tmp/get_pip.py force=yes url="https://bootstrap.pypa.io/get-pip.py"
 
-- name: Init the is_atomic fact
+- name: "Install newest pip"
+  become: yes
+  shell: python get_pip.py
+  args:
+    chdir: /tmp
+
+- include: "{{ item }}"
+  with_first_found:
+   - "{{ ansible_distribution }}.yml"
+   - "{{ ansible_os_family }}.yml"
+
+- name: "Enable SSL/HTTPS/SNI for pip"
+  pip: name={{ item }} state=latest
+  with_items:
+    - pyopenssl
+    - pyasn1
+    - ndg-httpsclient
+    - urllib3
+
+- name: Detect init system
+  shell: >
+    if [[ "$(/sbin/init --version)" =~ "upstart" ]]; then echo "upstart";
+    elif [[ "$(systemctl)" =~ "-.mount" ]]; then echo "systemd";
+    elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo "sysv-init";
+    else echo "unknown"; fi
+  args:
+    executable: /bin/bash
+  register: init_system_detect
+
+- name: Set init system fact
   set_fact:
-    is_atomic: false
+    init_system: "{{ init_system_detect.stdout }}"
 
-- name: Set the is_atomic fact
-  set_fact:
-    is_atomic: true
-  when: s.stat.exists
+- name: Check init system compatibility
+  assert:
+    that: init_system != "unknown"
 
-- name: Determine if has rpm
-  stat: path=/usr/bin/rpm
-  register: s
-  changed_when: false
-  always_run: yes
-
-- name: Init the has_rpm fact
-  set_fact:
-    has_rpm: false
-
-- name: Set the has_rpm fact
-  set_fact:
-    has_rpm: true
-  when: s.stat.exists
-
-- name: Init the has_firewalld fact
-  set_fact:
-    has_firewalld: false
-
-- name: Init the has_iptables fact
-  set_fact:
-    has_iptables: false
-
-# collect information about what packages are installed
-- include: rpm.yml
-  when: has_rpm
-
-- include: fedora-install.yml
-  when: not is_atomic and ansible_distribution == "Fedora"
+- debug: msg="Detected init system {{ init_system }}"
