@@ -3,9 +3,11 @@ Description=Apache Zookeeper
 After=docker.service
 Requires=docker.service
 
+{% set img = 'mesoscloud/' + zookeeper_docker_image -%}
+
 {% set service = {
 	'name': 'zookeeper',
-	'image': 'mesoscloud/zookeeper:3.4.6',
+	'image': img,
 	'network_mode': 'host',
 	'mounts': ['/var/lib/zookeeper:/var/lib/zookeeper:Z'],
 	'env': ['MYID=1', 'SERVERS=localhost']
