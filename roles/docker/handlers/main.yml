@@ -22,7 +22,7 @@
   when: '"docker0" in ansible_interfaces'
 
   # TODO: work only on default installation...
-- name: docker graph driver 
+- name: docker graph driver
   command: findmnt -no FSTYPE -T /var/lib/docker
   register: docker_driver
   ignore_errors: True
@@ -34,7 +34,7 @@
     dest="{{ docker_config_dir }}/docker"
     regexp="^(OPTIONS=.*)(--selinux-enabled(?!=false)([^\s\"\']*))"
     replace="\1--selinux-enabled=false"
-  when: docker_driver.stdout == 'btrfs'
+  when: docker_driver is defined and docker_driver.stdout == 'btrfs'
 
 - name: docker start service
   service: name=docker state=started
