@@ -1,0 +1,24 @@
+---
+
+contrail_images_path: "contrail-3.1/Ubuntu"
+
+contrail_controller_image: "contrail-controller-liberty"
+contrail_analytics_image: "contrail-analytics-liberty"
+contrail_agent_image: "contrail-agent-liberty"
+
+contrail_controller_image_version: "3.1.1.0-29"
+contrail_analytics_image_version: "3.1.1.0-29"
+contrail_agent_image_version: "3.1.1.0-29"
+
+contrail_controller_image_file: "{{ contrail_controller_image }}-{{ contrail_controller_image_version }}.tar.gz"
+contrail_analytics_image_file: "{{ contrail_analytics_image }}-{{ contrail_analytics_image_version }}.tar.gz"
+contrail_agent_image_file: "{{ contrail_agent_image }}-{{ contrail_agent_image_version }}.tar.gz"
+
+contrail_python_package: "python-contrail_3.1.1.0-29_amd64.deb"
+
+python_geventhttpclient_package: "https://launchpad.net/~opencontrail/+archive/ubuntu/ppa/+build/5970985/+files/python-geventhttpclient_1.1.0-1contrail1_amd64.deb"
+python_consistent_hash_package: "https://launchpad.net/~opencontrail/+archive/ubuntu/ppa/+build/7026488/+files/python-consistent-hash_1.0-0contrail1_amd64.deb"
+python_backports_ssl_package: "http://ftp.pl.debian.org/debian/pool/main/b/backports.ssl-match-hostname/python-backports.ssl-match-hostname_3.5.0.1-1_all.deb"
+python_certifi_package: "https://launchpad.net/~chris-lea/+archive/ubuntu/python-requests/+build/5495054/+files/python-certifi_1.0.0-1chl1~raring1_all.deb"
+python_pycassa_package: "http://launchpadlibrarian.net/174108584/python-pycassa_1.11.0-1_all.deb"
+python_thrift_package: "http://ftp.pl.debian.org/debian/pool/main/p/python-thrift/python-thrift_0.9.1-2_amd64.deb"

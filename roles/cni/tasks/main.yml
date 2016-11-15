@@ -1,3 +1,7 @@
+---
+
+- include_vars: golang.yml
+
 - include: master.yml
   when: node_type == "master"
 

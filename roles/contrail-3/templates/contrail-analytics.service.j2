@@ -1,0 +1,23 @@
+[Unit]
+Description=Contrail vRouter agent
+After=docker.service
+Requires=docker.service
+
+{% set img = contrail_analytics_image + ':' + contrail_analytics_image_version -%}
+{% set mount_log_dir = contrail_log_dir + ':/var/log/contrail:Z' -%}
+
+{% set service = {
+    'name': 'contrail-analytics',
+    'image': img,
+    'network_mode': 'host',
+    'extra_opts': '--privileged=true --cap-add=AUDIT_WRITE --pid=host',
+    'mounts': [mount_log_dir],
+    'env': ['CLOUD_ORCHESTRATOR=kubernetes']
+}
+-%}
+
+{% import 'systemd.service.j2' as systemd with context -%}
+{{ systemd.systemd_docker_service(service) }}
+
+[Install]
+WantedBy=multi-user.target

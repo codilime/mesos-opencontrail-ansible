@@ -1,4 +1,5 @@
 ---
+
 - name: zookeeper directory
   file: name=/var/lib/zookeeper state=directory
 
@@ -6,18 +7,22 @@
   template: src="{{ item }}.upstart.j2" dest="/etc/init/{{ item }}.conf"
   with_items:
     - zookeeper
+  when: init_system == "upstart"
 
-- name: Docker image ids (services)
-  command: docker images -q "{{ item }}"
+- name: master services systemd files
+  template: src={{ item }}.service.j2 dest=/etc/systemd/system/{{ item }}.service
   with_items:
-    - mesoscloud/zookeeper:3.4.6
-  register: image_ids
-  always_run: true
+    - zookeeper
+  when: init_system == "systemd"
 
-- name: Pull docker images (services)
-  command: docker pull "{{ item.item }}"
-  with_items: "{{ image_ids.results }}"
-  when: not item.stdout
+- name: reload systemd
+  command: systemctl --system daemon-reload
+  when: init_system == "systemd"
+
+- name: Pull zookeeper image
+  command: docker pull "{{ item }}"
+  with_items:
+    - "mesoscloud/{{ zookeeper_docker_image }}"
 
 - name: Run zookeeper
   service: name="{{ item }}" enabled=yes state=started

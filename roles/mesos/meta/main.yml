@@ -1,7 +1,6 @@
 ---
 
 dependencies:
-  - { role: resolution }
   - { role: common }
   - { role: docker }
-  - { role: zookeeper }
+  - { role: zookeeper, when: inventory_hostname in groups.masters }

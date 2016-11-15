@@ -1,0 +1,4 @@
+---
+
+mesos_package_url: "http://repos.mesosphere.com/el/7/x86_64/RPMS"
+mesos_package_name: "mesos-1.0.1-2.0.93.centos701406.x86_64.rpm"

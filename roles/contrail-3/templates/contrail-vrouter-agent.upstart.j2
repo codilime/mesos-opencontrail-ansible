@@ -14,5 +14,5 @@ post-stop script
 end script
 
 script
-        /usr/bin/docker run --name contrail-vrouter-agent -v "{{ contrail_log_dir }}:/var/log/contrail" -v /usr/src:/usr/src  -v /lib/modules:/lib/modules -v /etc/contrail/contrail-vrouter-agent.conf:/etc/contrail/contrail-vrouter-agent.conf --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes -e DISCOVERY_SERVER={{ contrail_master_host_addresses }} -e CONFIG_IP={{ contrail_master_host_address }} -e VROUTER_PHYSICAL_INTERFACE={{ contrail_host_interface }} contrail-agent-liberty:3.1.1.0-29
+        /usr/bin/docker run --name contrail-vrouter-agent -v "{{ contrail_log_dir }}:/var/log/contrail" -v /usr/src:/usr/src  -v /lib/modules:/lib/modules -v /etc/contrail/contrail-vrouter-agent.conf:/etc/contrail/contrail-vrouter-agent.conf --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes -e DISCOVERY_SERVER={{ contrail_master_host_addresses }} -e CONFIG_IP={{ contrail_master_host_address }} -e VROUTER_PHYSICAL_INTERFACE={{ contrail_host_interface }} {{ contrail_agent_image }}:{{ contrail_agent_image_version }}
 end script

@@ -1,0 +1,17 @@
+---
+
+- name: Interface configuration file
+  template: src=ifcfg-gateway.j2 dest=/etc/sysconfig/network-scripts/ifcfg-{{ gw_iface }}
+  with_items:
+    - gateway0
+    - gateway1
+  loop_control:
+    loop_var: gw_iface
+
+- name: Static routes
+  template: src=route-{{ gw_iface }}.j2 dest=/etc/sysconfig/network-scripts/route-{{ gw_iface }}
+  with_items:
+    - gateway0
+    - gateway1
+  loop_control:
+    loop_var: gw_iface

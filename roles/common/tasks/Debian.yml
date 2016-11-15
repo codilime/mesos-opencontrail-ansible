@@ -1,0 +1,34 @@
+---
+
+# Need to do it this way explicitly
+# Using filters will try to get filter_plugins
+# which is dependent on netaddr
+- name: Install netaddr
+  local_action: "{{ ansible_pkg_mgr }}"
+  args:
+    name: python-netaddr
+    state: latest
+    force: yes
+  ignore_errors: yes
+  run_once: true
+
+- name: Make sure necessary packages are installed
+  become: yes
+  action: "{{ ansible_pkg_mgr }}"
+  args:
+    name: "{{ package }}"
+    state: latest
+    force: yes
+    update_cache: yes
+  with_items:
+    - python-dev
+    - python-markupsafe
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+  loop_control:
+    loop_var: package
+  retries: 3
+  delay: 5
+  register: result
+  until: result|success

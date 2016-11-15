@@ -10,11 +10,7 @@
 
 - include: vrouter.yml
 
-- name: Interface configuration file
-  template: src=gateway.cfg.j2 dest=/etc/network/interfaces.d/{{ item }}.cfg
-  with_items:
-    - gateway0
-    - gateway1
+- include: "gateway_{{ ansible_os_family }}.yml"
 
 - name: Wait for vRouter
   wait_for:

@@ -3,16 +3,54 @@
 - name: Install golang
   include: golang.yml
 
-- include_vars: golang.yml
-
 - name: Copy hook module config
   template:
   args:
     src: opencontrail_hook_module_config.json.j2
     dest: "{{ mesos_modules_config_dir }}/opencontrail_hook_module_config.json"
 
-- name: Add protobub repo
+- name: Add protobub repo for Debian
   apt_repository: repo="ppa:5-james-t/protobuf-ppa"
+  when: ansible_os_family == "Debian"
+
+- name: Install hook module dependencies
+  yum:
+  args:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - boost-devel
+#    - protobuf-devel
+    - glog-devel
+    - gflags-devel
+    - libcurl-devel
+  when: ansible_os_family == "RedHat"
+
+- name: get protobuf
+  get_url: url=https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.bz2 dest=/tmp force=yes
+  when: ansible_os_family == "RedHat"
+
+- name: extract protobuf
+  command: tar xjvf protobuf-2.6.1.tar.bz2
+  args:
+    chdir: /tmp
+  when: ansible_os_family == "RedHat"
+
+- name: compile and install protobuf
+  shell: "{{ item }}"
+  args:
+    chdir: "/tmp/protobuf-2.6.1"
+  with_items:
+    - bash autogen.sh
+    - ./configure --prefix=/usr
+    - make -j {{ (ansible_processor_vcpus) | int }}
+#    - make check
+    - make install
+  when: ansible_os_family == "RedHat"
+
+- name: reload libs
+  command: ldconfig
+  when: ansible_os_family == "RedHat"
 
 - name: Install hook module dependencies
   apt:
@@ -23,6 +61,7 @@
     - libboost-dev
     - libprotobuf-dev
     - libgoogle-glog-dev
+  when: ansible_os_family == "Debian"
 
 - name: Create /var/run/netns dir
   file: path=/var/run/netns state=directory

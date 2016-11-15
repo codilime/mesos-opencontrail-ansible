@@ -1,17 +1,13 @@
 ---
-- name: Add mesosphere repo
-  yum: name={{ mesosphere_yum_repo }} state=present
-
-- name: Downloading and enable the EPEL repository definitions.
-  yum: name={{ epel_repo }} state=present
 
 - name: Install os packages
-  yum: name={{item}} state=present
+  yum: name={{ package }} state=present
   with_items:
     - wget
     - curl
     - unzip
-    - libselinux-python 
+    - libselinux-python
     - python-setuptools
-    - mesos-{{mesos_version}}
-    
+    - java-1.8.0-openjdk
+  loop_control:
+    loop_var: package

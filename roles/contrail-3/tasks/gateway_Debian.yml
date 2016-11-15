@@ -1,0 +1,9 @@
+---
+
+- name: Interface configuration file
+  template: src=gateway.cfg.j2 dest=/etc/network/interfaces.d/{{ gw_iface }}.cfg
+  with_items:
+    - gateway0
+    - gateway1
+  loop_control:
+    loop_var: gw_iface

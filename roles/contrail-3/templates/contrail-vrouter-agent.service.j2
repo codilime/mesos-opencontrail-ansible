@@ -1,0 +1,26 @@
+[Unit]
+Description=Contrail vRouter agent
+After=docker.service
+Requires=docker.service
+
+{% set img = contrail_agent_image + ':' + contrail_agent_image_version -%}
+{% set env_discovery_server = 'DISCOVERY_SERVER=' + contrail_master_host_addresses -%}
+{% set env_config_ip = 'CONFIG_IP=' + contrail_master_host_address -%}
+{% set env_vrouter_physical_interface = 'VROUTER_PHYSICAL_INTERFACE=' + contrail_host_interface -%}
+{% set mount_log_dir = contrail_log_dir + ':/var/log/contrail:Z' -%}
+
+{% set service = {
+    'name': 'contrail-vrouter-agent',
+    'image': img,
+    'network_mode': 'host',
+    'extra_opts': '--privileged=true --cap-add=AUDIT_WRITE --pid=host',
+    'mounts': [mount_log_dir, '/usr/src:/usr/src:Z', '/lib/modules:/lib/modules:Z', '/etc/contrail/contrail-vrouter-agent.conf:/etc/contrail/contrail-vrouter-agent.conf:Z'],
+    'env': ['CLOUD_ORCHESTRATOR=kubernetes', 'COMPILE_VROUTER_MODULE=no', 'INSTALL_VROUTER_MODULE=yes', env_discovery_server, env_config_ip, env_vrouter_physical_interface]
+}
+-%}
+
+{% import 'systemd.service.j2' as systemd with context -%}
+{{ systemd.systemd_docker_service(service) }}
+
+[Install]
+WantedBy=multi-user.target

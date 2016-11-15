@@ -1,4 +1,4 @@
-description "OpenContrail control-node"
+description "OpenContrail analytics"
 
 start on started contrail-control
 stop on runlevel [!2345]
@@ -14,5 +14,5 @@ post-stop script
 end script
 
 script
-        /usr/bin/docker run --name contrail-analytics -v "{{ contrail_log_dir }}:/var/log/contrail" --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes contrail-analytics-liberty:3.1.1.0-29
+        /usr/bin/docker run --name contrail-analytics -v "{{ contrail_log_dir }}:/var/log/contrail" --privileged=true --cap-add=AUDIT_WRITE --pid=host --net=host -e CLOUD_ORCHESTRATOR=kubernetes {{ contrail_analytics_image }}:{{ contrail_analytics_image_version }}
 end script

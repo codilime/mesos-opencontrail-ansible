@@ -6,7 +6,7 @@ stop on runlevel [!2345]
 respawn
 
 pre-start script
-	/usr/bin/docker pull mesoscloud/zookeeper:3.4.6
+	/usr/bin/docker pull mesoscloud/{{ zookeeper_docker_image }}
 	/usr/bin/docker rm zookeeper || echo "ignore error"
 end script
 
@@ -15,5 +15,5 @@ post-stop script
 end script
 
 script
-        /usr/bin/docker run --name zookeeper --privileged=true --net=host -v /var/lib/zookeeper:/var/lib/zookeeper -v /var/log/zookeeper:/var/log/zookeeper -e "MYID=1" -e "SERVERS=localhost" mesoscloud/zookeeper:3.4.6
+        /usr/bin/docker run --name zookeeper --privileged=true --net=host -v /var/lib/zookeeper:/var/lib/zookeeper -v /var/log/zookeeper:/var/log/zookeeper -e "MYID=1" -e "SERVERS=localhost" mesoscloud/zookeeper:{{ zookeeper_docker_image }}
 end script

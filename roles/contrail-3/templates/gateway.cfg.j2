@@ -1,15 +1,15 @@
-auto {{ item }}
-iface {{ item }} inet static
+auto {{ gw_iface }}
+iface {{ gw_iface }} inet static
     pre-up modprobe vrouter
-    pre-up ip link add name {{ item }} type vhost
-    pre-up ip link set {{ item }} address 00:00:5e:00:01:00
-{% if item == "gateway0" and contrail_public_subnet is defined %}
+    pre-up ip link add name {{ gw_iface }} type vhost
+    pre-up ip link set {{ gw_iface }} address 00:00:5e:00:01:00
+{% if gw_iface == "gateway0" and contrail_public_subnet is defined %}
     up ip route add {{ contrail_public_subnet }} dev gateway0 src {{ contrail_host_address }}
 {% endif %}
-{% if item == "gateway1" %}
+{% if gw_iface == "gateway1" %}
     up ip route add {{ contrail_service_subnet }} dev gateway1 src {{ contrail_host_address }}
 {% endif %}
     address 0.0.0.0
-    post-down docker exec contrail-vrouter-agent sh -c "vif --list | awk '/^vif.*OS: {{ item }}/ {split($1, arr, "\/"); print arr[2];}' | xargs vif --delete"
-    post-down ip link delete {{ item }}
+    post-down docker exec contrail-vrouter-agent sh -c "vif --list | awk '/^vif.*OS: {{ gw_iface }}/ {split($1, arr, "\/"); print arr[2];}' | xargs vif --delete"
+    post-down ip link delete {{ gw_iface }}
 
