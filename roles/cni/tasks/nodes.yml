@@ -71,6 +71,7 @@
   args:
     repo: "https://github.com/containernetworking/cni.git"
     dest: "{{ go_gopath }}/src/github.com/containernetworking/cni"
+    version: "{{ cni_version }}" 
     force: yes
 
 - name: Build cni plugins

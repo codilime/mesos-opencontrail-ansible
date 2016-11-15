@@ -1,5 +1,6 @@
 ---
 cni_opencontrail_plugin_version: master
+cni_version: "e70e6034d220e42bfa8758f8df7ff66c36697fa0"
 
 mesos_agent_linklocal_ip: 169.254.169.1
 mesos_agent_linklocal_port: 5051
