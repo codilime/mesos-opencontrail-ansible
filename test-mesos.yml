@@ -1,0 +1,115 @@
+---
+
+- name: Basic mesos master checks
+  hosts: masters
+  tasks:
+#      - name: Check mesos-master service
+#        service: name=mesos-master state=started enabled=yes
+
+      - name: Check if mesos-master process is running
+        become: yes
+        shell: pidof mesos-master
+        register: pidof_mesos_master
+
+      - assert:
+          that: pidof_mesos_master.rc == 0
+
+      - name: Check for master TCP port
+        wait_for:
+            host: '{{ ansible_eth0.ipv4.address }}'
+            port: '{{ mesos_master_port }}'
+            state: present
+            timeout: 10
+      - name: Check master health
+        uri:
+            url: 'http://{{ ansible_eth0.ipv4.address }}:{{ mesos_master_port }}/health'
+            status_code: 200
+
+- name: Basic mesos slave checks
+  hosts: slaves
+  tasks:
+#      - name: Check mesos-slave service
+#        service: name=mesos-slave state=started enabled=yes
+
+      - name: Get main IP address
+        set_fact:
+            ip_address: "{{ ansible_eth0.ipv4.address }}"
+        when: ansible_eth0 is defined and ansible_eth0.ipv4 is defined
+
+      - name: Get main IP address
+        set_fact:
+            ip_address: "{{ ansible_vhost0.ipv4.address }}"
+        when: ansible_vhost0 is defined and ansible_vhost0.ipv4 is defined
+
+
+      - name: Check if mesos-slave process is running
+        become: yes
+        shell: pidof mesos-slave
+        register: pidof_mesos_slave
+
+      - assert:
+          that:
+             - pidof_mesos_slave.rc == 0
+             - ip_address is defined
+
+      - name: Check for slave TCP port
+        wait_for:
+            host: "{{ ip_address }}"
+            port: "{{ mesos_slave_port }}"
+            state: present
+            timeout: 10
+
+      - name: Check slave health
+        uri:
+            url: 'http://{{ ip_address }}:{{ mesos_slave_port }}/health'
+            status_code: 200
+
+- name: Check master<->slave integration (master)
+  hosts: masters
+  tasks:
+      - include_vars:
+          file: ./roles/mesos/defaults/main.yml
+
+      - name: Get master state
+        uri:
+            url: 'http://{{ ansible_eth0.ipv4.address }}:{{ mesos_master_port }}/state'
+            status_code: 200
+            body_format: json
+        register: master_state
+
+      - name: Check if all slaves are registered
+        assert:
+            that:
+                - master_state.json.activated_slaves | int == groups['slaves'] | length
+
+      - name: Check that the master is part of our cluster
+        assert:
+            that:
+                - master_state.json.cluster == '{{ mesos_cluster_name }}'
+
+- name: Check master<->slave integration (slave)
+  hosts: slaves
+  tasks:
+
+      - name: Get main IP address
+        set_fact:
+            ip_address: "{{ ansible_eth0.ipv4.address }}"
+        when: ansible_eth0 is defined and ansible_eth0.ipv4 is defined
+
+      - name: Get main IP address
+        set_fact:
+            ip_address: "{{ ansible_vhost0.ipv4.address }}"
+        when: ansible_vhost0 is defined and ansible_vhost0.ipv4 is defined
+
+      - name: Get slave state
+        uri:
+            url: 'http://{{ ip_address }}:{{ mesos_slave_port }}/state'
+            status_code: 200
+            body_format: json
+        register: slave_state
+
+      - name: Check master hostname
+        assert:
+            that:
+                - slave_state.json.master_hostname != ""
+

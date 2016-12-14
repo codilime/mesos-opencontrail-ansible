@@ -1,0 +1,32 @@
+---
+
+- name: Basic marathon checks
+  hosts: masters
+  tasks: 
+      - include_vars: ./roles/marathon/vars/main.yml
+
+      - name: Check if marathon process is running
+        shell: ps aux | grep java | grep -q mesosphere.marathon
+        register: ps_marathon
+
+      - assert:
+          that: ps_marathon.rc == 0
+
+      - name: Check for marathon TCP port
+        wait_for:
+            host: '{{ ansible_eth0.ipv4.address }}'
+            port: '{{ marathon_http_port }}'
+            state: present
+            timeout: 10
+
+      - name: Check master health
+        uri:
+            url: 'http://{{ ansible_eth0.ipv4.address }}:{{ marathon_http_port }}/v2/info'
+            status_code: 200
+            body_format: json
+        register: marathon_info
+
+      - assert:
+          that:
+              - marathon_info.json.elected == true
+

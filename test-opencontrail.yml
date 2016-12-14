@@ -1,0 +1,134 @@
+---
+
+- name: Basic opencontrail checks (masters)
+  hosts: masters
+  tasks: 
+      - include_vars: './roles/contrail-3/vars/{{ ansible_os_family}}_vars.yml'
+
+      - name: Install docker py
+        become: yes
+        pip: name=docker-py state=latest
+
+      - name: Check opencontrail controller
+        become: yes
+        docker_image_facts:
+            name: "{{ contrail_controller_image }}:{{ contrail_controller_image_version }}"
+        register: controller_image_facts
+
+      - assert:
+          that:
+              - controller_image_facts is defined
+              - controller_image_facts.images | length == 1
+              - controller_image_facts.images[0].Container != ""
+              - controller_image_facts.images[0].ContainerConfig.ExposedPorts['{{ contrail_control_api_port }}/tcp'] | string
+              - controller_image_facts.images[0].ContainerConfig.ExposedPorts['8143/tcp'] | string
+
+      - name: Check controller API port
+        wait_for:
+            host: '{{ ansible_eth0.ipv4.address }}'
+            port: '{{ contrail_control_api_port }}'
+            state: present
+            timeout: 10
+
+      - name: Check opencontrail analytics
+        become: yes
+        docker_image_facts:
+            name: "{{ contrail_analytics_image }}:{{ contrail_analytics_image_version }}"
+        register: analytics_image_facts
+
+      - assert:
+          that:
+              - analytics_image_facts is defined
+              - analytics_image_facts.images | length == 1
+              - analytics_image_facts.images[0].Container != ""
+              - analytics_image_facts.images[0].ContainerConfig.ExposedPorts['8081/tcp'] | string
+
+      - name: Check controller API port
+        wait_for:
+            host: '{{ ansible_eth0.ipv4.address }}'
+            port: 8081
+            state: present
+            timeout: 10
+
+- name: Basic opencontrail checks (slaves)
+  hosts: nodes
+  tasks:
+
+      - include_vars: './roles/contrail-3/vars/{{ ansible_os_family}}_vars.yml'
+
+      - name: Install docker py
+        become: yes
+        pip: name=docker-py state=latest
+
+      - name: Check opencontrail agent
+        become: yes
+        docker_image_facts:
+            name: "{{ contrail_agent_image }}:{{ contrail_agent_image_version }}"
+        register: agent_image_facts
+
+      - debug: msg='{{agent_image_facts}}'
+
+      - assert:
+          that:
+              - agent_image_facts is defined
+              - agent_image_facts.images | length == 1
+              - agent_image_facts.images[0].Container != ""
+              - agent_image_facts.images[0].ContainerConfig.ExposedPorts['8081/tcp'] | string
+
+      - name: Check agent port
+        wait_for:
+            host: '{{ ansible_vhost0.ipv4.address }}'
+            port: 9090
+            state: present
+            timeout: 10
+
+- name: Basic opencontrail checks (gateways)
+  hosts: gateways
+  tasks:
+
+      - include_vars: './roles/contrail-3/vars/{{ ansible_os_family}}_vars.yml'
+
+      - name: Install docker py
+        become: yes
+        pip: name=docker-py state=latest
+
+      - name: Check opencontrail agent
+        become: yes
+        docker_image_facts:
+            name: "{{ contrail_agent_image }}:{{ contrail_agent_image_version }}"
+        register: agent_image_facts
+
+      - debug: msg='{{agent_image_facts}}'
+
+      - assert:
+          that:
+              - agent_image_facts is defined
+              - agent_image_facts.images | length == 1
+              - agent_image_facts.images[0].Container != ""
+              - agent_image_facts.images[0].ContainerConfig.ExposedPorts['8081/tcp'] | string
+
+      - name: Check agent port
+        wait_for:
+            host: '{{ ansible_vhost0.ipv4.address }}'
+            port: 9090
+            state: present
+            timeout: 10
+
+- name: Controller Checks
+  hosts: masters
+  tasks:
+
+      - name: Check for vrouters registered on controller nodes
+        uri:
+            url: 'http://{{ ansible_eth0.ipv4.address }}:{{ contrail_control_api_port}}/virtual-routers'
+            status_code: 200
+            body_format: json                                                                                                      
+        register: virtual_routers
+
+      - debug: msg='{{ virtual_routers }}'
+
+      - assert:
+          that:
+              - virtual_routers.json['virtual-routers'] | string
+              - virtual_routers.json['virtual-routers'] | length == groups["nodes"] | length + groups["gateways"] | length
+
