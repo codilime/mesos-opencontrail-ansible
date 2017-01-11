@@ -1,0 +1,38 @@
+[cluster:children]
+masters
+nodes
+gateways
+
+[contrail:children]
+masters
+nodes
+gateways
+
+[mesos:children]
+masters
+slaves
+
+[contrail:vars]
+cluster_subnet={{ cluster.subnet }}
+public_subnet={{ cluster.public_subnet }}
+private_subnet={{ cluster.private_subnet }}
+service_subnet={{ cluster.service_subnet }}
+
+[masters]
+{% for master in cluster.masters %}{{ master.name }} ansible_ssh_host={{ master.ip }} ansible_ssh_user={{ ssh_user }}
+{% endfor %}
+[gateways]
+{% for gateway in cluster.gateways %}{{ gateway.name }} ansible_ssh_host={{ gateway.ip }} ansible_ssh_user={{ ssh_user }}
+{% endfor %}
+[slaves]
+{% for node in cluster.nodes %}{{ node.name }} ansible_ssh_host={{ node.ip }} ansible_ssh_user={{ ssh_user }}
+{% endfor %}
+[deployers]
+deployer ansible_ssh_host=localhost ansible_ssh_user={{ ssh_user }}
+
+[marathon:children]
+masters
+
+[nodes:children]
+slaves
+
