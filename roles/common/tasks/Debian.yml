@@ -4,7 +4,7 @@
 # Using filters will try to get filter_plugins
 # which is dependent on netaddr
 - name: Install netaddr
-  local_action: "{{ ansible_pkg_mgr }}"
+  action: "{{ ansible_pkg_mgr }}"
   args:
     name: python-netaddr
     state: latest

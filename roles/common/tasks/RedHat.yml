@@ -2,7 +2,7 @@
 
 - name: Make sure necessary packages are installed
   become: yes
-  local_action: "{{ ansible_pkg_mgr }}"
+  action: "{{ ansible_pkg_mgr }}"
   args:
     name: "{{ package }}"
     state: latest
