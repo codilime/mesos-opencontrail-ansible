@@ -28,7 +28,7 @@ service_subnet={{ cluster.service_subnet }}
 {% for node in cluster.nodes %}{{ node.name }} ansible_ssh_host={{ node.ip }} ansible_ssh_user={{ ssh_user }}
 {% endfor %}
 [deployers]
-deployer ansible_ssh_host=localhost ansible_ssh_user={{ ssh_user }}
+deployer ansible_ssh_host=localhost ansible_ssh_user={{ ssh_user_deployer }}
 
 [marathon:children]
 masters

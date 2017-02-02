@@ -230,7 +230,8 @@ def defineOSCluster():
 
 def createInventoryFile(cluster):
     inv = env.get_template('inventory.j2')
-    render_output = inv.render(cluster=cluster, ssh_user=DEFAULT_SSH_USERNAME)
+    render_output = inv.render(cluster=cluster, ssh_user=DEFAULT_SSH_USERNAME,
+                               ssh_user_deployer=DEPLOYER_USER)
 
     tmpdir = os.popen('mktemp -d').read().strip()
     with open(os.path.join(tmpdir, INVENOTRY_FILENAME), 'wb') as f:
