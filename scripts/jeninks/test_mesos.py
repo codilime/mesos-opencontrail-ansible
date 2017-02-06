@@ -36,7 +36,7 @@ DEPLOYER_USER = 'ubuntu'
 INVENOTRY_FILENAME = 'inventory.cluster'
 
 MESOS_ANSIBLE_REPO = 'https://github.com/codilime/mesos-opencontrail-ansible'
-MESOS_REPO_BRANCH = 'tests'
+MESOS_REPO_BRANCH = 'master'
 
 
 class MesosTestServer:
@@ -230,7 +230,7 @@ def defineOSCluster():
 
 def createInventoryFile(cluster):
     inv = env.get_template('inventory.j2')
-    render_output = inv.render(cluster=cluster, ssh_user=DEFAULT_SSH_USERNAME,
+    render_output = inv.render(cluster=cluster, ssh_user=OS_SSH_USERNAME,
                                ssh_user_deployer=DEPLOYER_USER)
 
     tmpdir = os.popen('mktemp -d').read().strip()
@@ -276,7 +276,7 @@ def prepareWorkingDirDeployer(host, username, ssh, cluster):
         raise
     sftp.close()
     # give some time for machines
-    time.sleep(10)
+    time.sleep(20)
     return remote_tmpdir
 
 
