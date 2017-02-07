@@ -71,8 +71,10 @@
     name: "{{ package }}"
     state: latest
   with_items:
-    - kernel-headers-{{ uname.stdout }}
-    - kernel-devel-{{ uname.stdout }}
+    - kernel-headers
+    - kernel-devel
+    # - kernel-headers-{{ uname.stdout }}
+    # - kernel-devel-{{ uname.stdout }}
   loop_control:
     loop_var: package
   when: ansible_os_family == "RedHat"
